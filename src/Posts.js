@@ -1,4 +1,4 @@
-import React, {useEffect,useLayoutEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import {PostForm} from "./PostForm";
 import {PostList} from "./PostList";
@@ -11,8 +11,9 @@ export function Posts() {
   const [isLoading, setIsLoading] = useState(true);
   const [posts, setPosts] = useState([]);
   const [isSaved, setIsSaved] = useState(false);
+  const [isDeleted, setIsDeleted] = useState(false);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     axios.get("https://60bb880442e1d00017620c95.mockapi.io/Posts/")
         .then((response) => {
           setIsLoading(false);
@@ -25,7 +26,7 @@ export function Posts() {
           setIsLoading(false);
           return [];
         });
-  },[editPostID,deletePostID,setIsSaved]);
+  },[editPostID,deletePostID,isSaved,isDeleted]);
 
 
   console.log(posts);
@@ -33,25 +34,27 @@ export function Posts() {
 
   const handleEditPost = (id) => {
     setEditPostID(id);
+    console.log(id);
   }
+
   const handleDeletePost = (id) => {
     setDeletePostID(id);
 
-    //alert(deletePostID);
     let foundInd = posts.findIndex((el)=>el.id === deletePostID);
     posts.splice(foundInd,1);
     axios.delete("https://60bb880442e1d00017620c95.mockapi.io/Posts/" + id)
         .then( (response) => {
-          console.log(response);
+          //console.log(response);
           setIsLoading(false);
         })
         .catch((error) => {
-          console.log(error);
-
+          //console.log(error);
           setIsLoading(false);
         });
   }
+
   const onSubmit = (values) => {
+    //сохранение нового поста
     if (editPostID === null) {
         let newPost = {
             createdAt: new Date().toISOString(),
@@ -60,22 +63,19 @@ export function Posts() {
         }
         axios.post("https://60bb880442e1d00017620c95.mockapi.io/Posts/", newPost)
             .then( (response) => {
-
                 setIsLoading(false);
             })
             .catch((error) => {
                 setIsLoading(false);
             });
         setIsSaved(true);
-    } else {
-
+    } else { //сохранение отредактированного поста
         let newPost = {
             id: editPostID,
             createdAt: new Date().toISOString(),
             title: values.title,
             body: values.body
         }
-
 
         let foundInd = posts.findIndex((el) => el.id === editPostID);
         if (foundInd > -1) {
@@ -88,27 +88,22 @@ export function Posts() {
                 .catch((error) => {
                     setIsLoading(false);
                 });
-
-
             setIsSaved(true);
         }
-        //setEditPostID(null);
     }
-
+    //удаление поста
     if (deletePostID !== null)
     {
       axios.delete("https://60bb880442e1d00017620c95.mockapi.io/Posts/" + deletePostID)
           .then( (response) => {
-            console.log(response);
             setIsLoading(false);
           })
           .catch((error) => {
-            console.log(error);
-
+            //console.log(error);
             setIsLoading(false);
           });
+        setIsDeleted(true);
     }
-
 
   };
 
@@ -118,35 +113,19 @@ export function Posts() {
         <PostForm
             title = {editPostID === null? '': posts[posts.findIndex(el => el.id === editPostID)].title}
             body = {editPostID === null? '': posts[posts.findIndex(el => el.id === editPostID)].body}
-            editPost={editPostID === null? false: true}
-            handleSubmit={onSubmit}
+            editPost = {editPostID === null? false: true}
+            handleCancel = {() => handleEditPost(null)}
+            handleSubmit = {onSubmit}
         />
 
-
-
-         <PostList
-            posts = { posts }
-            handleEditPost = { handleEditPost }
-            handleDeletePost = { handleDeletePost }
-         />
-
-          {/*
-
-              (posts !== null) &&
-              posts.map((post) => (
-                      <div key={post.id}>
-                          <div>{post.title}</div>
-                          <div>{post.body}</div>
-                          <div>
-                              <button onClick={() => handleEditPost(post.id)}>Edit</button>
-                              <button onClick={() => handleDeletePost(post.id)}>Delete</button>
-                          </div>
-                      </div>
-                  )
-              )
-              */
+          {
+              posts.length == 0 ? <p>Loading</p> :
+              <PostList
+                  posts={posts}
+                  handleEditPost={handleEditPost}
+                  handleDeletePost={handleDeletePost}
+              />
           }
-
 
       </div>
 
