@@ -10,15 +10,15 @@ export function Posts() {
   const [deletePostID, setDeletePostID] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [posts, setPosts] = useState([]);
-  const [isSaved, setIsSaved] = useState(false);
-  const [isDeleted, setIsDeleted] = useState(false);
+  const [counter, setCounter] = useState(0);
 
+  //стягиваем все посты
   useEffect(() => {
     axios.get("https://60bb880442e1d00017620c95.mockapi.io/Posts/")
         .then((response) => {
           setIsLoading(false);
           setPosts(response.data);
-          console.log(response.data);
+          setCounter(response.data.length);
         })
         .catch((error) => {
           console.log(error);
@@ -26,15 +26,12 @@ export function Posts() {
           setIsLoading(false);
           return [];
         });
-  },[editPostID,deletePostID,isSaved,isDeleted]);
+  },[editPostID,deletePostID,counter]);
 
-
-  console.log(posts);
 
 
   const handleEditPost = (id) => {
     setEditPostID(id);
-    console.log(id);
   }
 
   const handleDeletePost = (id) => {
@@ -42,13 +39,12 @@ export function Posts() {
 
     let foundInd = posts.findIndex((el)=>el.id === deletePostID);
     posts.splice(foundInd,1);
+    setCounter(counter - 1); //уменьшаем счетчик всех постов
     axios.delete("https://60bb880442e1d00017620c95.mockapi.io/Posts/" + id)
         .then( (response) => {
-          //console.log(response);
           setIsLoading(false);
         })
         .catch((error) => {
-          //console.log(error);
           setIsLoading(false);
         });
   }
@@ -68,7 +64,9 @@ export function Posts() {
             .catch((error) => {
                 setIsLoading(false);
             });
-        setIsSaved(true);
+
+        setCounter(counter + 1); //увеличиваем счетчик всех постов
+
     } else { //сохранение отредактированного поста
         let newPost = {
             id: editPostID,
@@ -88,7 +86,8 @@ export function Posts() {
                 .catch((error) => {
                     setIsLoading(false);
                 });
-            setIsSaved(true);
+
+            setEditPostID(null); //устанавливаем свойство, содержащее ID редактируемого поста в начальное состояние
         }
     }
     //удаление поста
@@ -99,10 +98,9 @@ export function Posts() {
             setIsLoading(false);
           })
           .catch((error) => {
-            //console.log(error);
             setIsLoading(false);
           });
-        setIsDeleted(true);
+        setDeletePostID(null); //устанавливаем свойство, содержащее ID удаляемого поста в начальное состояние
     }
 
   };
@@ -111,9 +109,7 @@ export function Posts() {
   return (
       <div>
         <PostForm
-            title = {editPostID === null? '': posts[posts.findIndex(el => el.id === editPostID)].title}
-            body = {editPostID === null? '': posts[posts.findIndex(el => el.id === editPostID)].body}
-            editPost = {editPostID === null? false: true}
+            editedPost = {editPostID === null? null: posts[posts.findIndex(el => el.id === editPostID)]}
             handleCancel = {() => handleEditPost(null)}
             handleSubmit = {onSubmit}
         />

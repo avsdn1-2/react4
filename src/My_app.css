@@ -1,0 +1,17 @@
+.lab
+{
+  width:100px;
+  float:left;
+}
+.wrap
+{
+  width:1120px;
+  /*border:1px solid green;*/
+  margin:0 auto;
+}
+.form
+{
+  width:1200px;
+  margin:10px auto 15px auto;
+  border:3px solid grey;
+}
